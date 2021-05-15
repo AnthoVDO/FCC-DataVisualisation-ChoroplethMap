@@ -12,6 +12,16 @@ const MARGIN = {
     left: 100
 }
 
+const COLOR = {
+    darkest: "#367481",
+    darker: "#428D9E",
+    dark: "#3894A8",
+    neutral: "#47ABC2",
+    light: "#64B8CB",
+    lighter: "#85C7D6",
+    lightest: "#a3d5e0"
+}
+
 
 /*-------------------------------------Graph-------------------------------------*/
 
@@ -19,7 +29,7 @@ const MARGIN = {
 
 const SVG = d3.select(".chart__container").append("svg");
 
-SVG.attr("width", CHART__WIDTH).attr("height", CHART__HEIGHT);
+SVG.attr("width", CHART__WIDTH).attr("height", CHART__HEIGHT).style("background-color", "#E6AC7A");
 
 //Create title
 
@@ -31,15 +41,39 @@ title.attr("x", CHART__WIDTH / 2)
     .text("")
     .attr("text-anchor", "middle")
 
+//Call Data DEGREE
 
-const callApi = async(URL) => {
+const callDegree = async(URL) => {
+    const fetchDegree = await fetch(URL);
+    const degree = await fetchDegree.json();
+}
+
+//Call MAP API
+
+
+const callMap = async(URL) => {
 
     const fetchUrl = await fetch(URL);
     const response = await fetchUrl.json();
+
+    const path = d3.geoPath();
+    const projection = d3.geoMercator()
+
+    SVG.append("g")
+        .selectAll("path")
+        .data(response.objects.counties)
+        .enter()
+        .append("path")
+        .attr("d", d3.geoPath().projection(projection))
+
+
+
+
+
 
     console.log(response)
 
 
 }
 
-callApi(CHART__EDUCATION)
+callMap(CHART__COUNTY)
