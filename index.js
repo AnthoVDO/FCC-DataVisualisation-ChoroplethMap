@@ -56,15 +56,24 @@ const callMap = async(URL) => {
     const fetchUrl = await fetch(URL);
     const response = await fetchUrl.json();
 
+    let feature = topojson.feature(response, response.objects.counties)
     const path = d3.geoPath();
-    const projection = d3.geoMercator()
+    const projection = d3.geoMercator().scale([response.transform.scale[0], response.transform.scale[1]]).translate([response.transform.translate[0], response.transform.translate[1]])
+
+    const translateX = response.transform.translate[0];
+    const translateY = response.transform.translate[1];
+
+    console.log("translate x : " + translateX)
+    console.log("translate Y : " + translateY)
 
     SVG.append("g")
         .selectAll("path")
-        .data(response.objects.counties)
+        .data(feature.features)
         .enter()
         .append("path")
-        .attr("d", d3.geoPath().projection(projection))
+        .attr("d", path)
+        .attr("transform", "scale(0.93, 0.8)")
+        .attr("class", "county")
 
 
 
