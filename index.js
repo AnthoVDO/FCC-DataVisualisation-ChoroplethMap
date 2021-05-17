@@ -12,15 +12,26 @@ const MARGIN = {
     left: 100
 }
 
-const COLOR = {
-    darkest: "#367481",
-    darker: "#428D9E",
-    dark: "#3894A8",
-    neutral: "#47ABC2",
-    light: "#64B8CB",
-    lighter: "#85C7D6",
-    lightest: "#a3d5e0"
-}
+/*-------------------------------------Title and description-------------------------------------*/
+
+//create title
+
+const title = d3.select(".chart__container").append("div");
+
+title.append("h1")
+    .attr("id", "title")
+    .text("United States Educational Attainment")
+    .style("text-align", "center")
+
+//create description
+
+const description = d3.select(".chart__container").append("div");
+
+description.append("h3")
+    .attr("id", "description")
+    .text("Percentage of adults age 25 and older with a bachelor's degree or higher (2010-2014)")
+    .style("text-align", "center")
+    .style("font-size", "16px")
 
 
 /*-------------------------------------Graph-------------------------------------*/
@@ -29,60 +40,95 @@ const COLOR = {
 
 const SVG = d3.select(".chart__container").append("svg");
 
-SVG.attr("width", CHART__WIDTH).attr("height", CHART__HEIGHT).style("background-color", "#E6AC7A");
+SVG.attr("width", CHART__WIDTH).attr("height", CHART__HEIGHT).style("border", "1px solid black");
 
-//Create title
 
-const title = SVG.append("text");
+//Call MAP API and Call Data DEGREE
 
-title.attr("x", CHART__WIDTH / 2)
-    .attr("y", MARGIN.top / 2)
-    .attr("id", "title")
-    .text("")
-    .attr("text-anchor", "middle")
 
-//Call Data DEGREE
+const callMap = async(urlMap, urlDegree) => {
 
-const callDegree = async(URL) => {
-    const fetchDegree = await fetch(URL);
+    const fetchMap = await fetch(urlMap);
+    const mapData = await fetchMap.json();
+
+    const fetchDegree = await fetch(urlDegree);
     const degree = await fetchDegree.json();
-}
+    console.log(degree);
+    const minDegree = d3.min(degree.map(e => e.bachelorsOrHigher))
+    const maxDegree = d3.max(degree.map(e => e.bachelorsOrHigher))
+    const COLOR = d3.scaleThreshold().domain(d3.range(minDegree, maxDegree, (maxDegree - minDegree) / 6)).range(d3.schemeOranges[7]);
+    const COLOR__LEGEND__VALUE = d3.range(minDegree, maxDegree, (maxDegree - minDegree) / 6);
+    COLOR__LEGEND__VALUE.push(70);
 
-//Call MAP API
+
+    //function to attribute the good color
+
+    const checkColor = (id) => {
+        const result = degree.filter(e => e.fips === id);
+        const color = result[0].bachelorsOrHigher;
+        return COLOR(color)
+    }
+
+    //function to attribute the degree
+
+    const checkDegree = (id) => {
+        const result = degree.filter(e => e.fips === id);
+        const idDegree = result[0].bachelorsOrHigher;
+        return idDegree;
+    }
 
 
-const callMap = async(URL) => {
+    //Create the map
 
-    const fetchUrl = await fetch(URL);
-    const response = await fetchUrl.json();
-
-    let feature = topojson.feature(response, response.objects.counties)
+    let feature = topojson.feature(mapData, mapData.objects.counties)
     const path = d3.geoPath();
-    const projection = d3.geoMercator().scale([response.transform.scale[0], response.transform.scale[1]]).translate([response.transform.translate[0], response.transform.translate[1]])
 
-    const translateX = response.transform.translate[0];
-    const translateY = response.transform.translate[1];
-
-    console.log("translate x : " + translateX)
-    console.log("translate Y : " + translateY)
-
-    SVG.append("g")
+    const map = SVG.append("g")
+    map
         .selectAll("path")
         .data(feature.features)
         .enter()
         .append("path")
         .attr("d", path)
-        .attr("transform", "scale(0.93, 0.8)")
+        .attr("transform", "scale(0.8, 0.8)")
         .attr("class", "county")
+        .style("fill", d => checkColor(d.id))
+        .attr("class", "county")
+        .attr("data-fips", d => d.id)
+        .attr("data-education", d => checkDegree(d.id))
+
+    map.attr("transform", "translate(30, 10)")
+
+
+    /*-------------------------------------Legend-------------------------------------*/
+    //Legend's scale
+    const yScale = d3.scaleBand().domain(COLOR__LEGEND__VALUE.map(x => x)).range(CHART__HEIGHT - MARGIN.bottom, MARGIN.top)
+    const legend = SVG.append("g")
+    legend.attr("id", "legend")
+        .selectAll("rect")
+        .data(COLOR__LEGEND__VALUE)
+        .enter()
+        .append("rect")
+        .attr("width", 10)
+        .attr("height", 10)
+        .attr("y", d => yScale(d))
+        .attr("fill", d => COLOR(d))
+
+
+
+
+    //create tooltip
+
+    //hover effect
 
 
 
 
 
 
-    console.log(response)
+
 
 
 }
 
-callMap(CHART__COUNTY)
+callMap(CHART__COUNTY, CHART__EDUCATION)
