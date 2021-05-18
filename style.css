@@ -5,15 +5,6 @@
     align-items: center;
 }
 
-
-/* CSS HEX */
-
-root {
-    --light-blue: #a3d5e0ff;
-    --middle-blue: #85c7d6ff;
-    --maximum-blue: #64b8cbff;
-    --pacific-blue: #47abc2ff;
-    --blue-munsell: #3894a8ff;
-    --blue-munsell-2: #428d9eff;
-    --ming: #367481ff;
+.chart__container {
+    position: relative;
 }
